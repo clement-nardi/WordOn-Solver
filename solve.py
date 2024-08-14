@@ -106,8 +106,8 @@ if __name__ == '__main__':
     parser.add_argument('board_layout', type=str, help='The layout of the board (" " for empty, "2" for 2x, "3" for 3x, "W" for letters sent to the opponent, "+" for +10)', default='      +', nargs='?')
     args = parser.parse_args()
 
-    opponent_letters = args.given_letters.lower()
-    player_letters = args.letters.lower()
+    opponent_letters = args.given_letters.lower().replace(" ", "")
+    player_letters = args.letters.lower().replace(" ", "")
     board_layout = args.board_layout.lower()
     possible_words = process_words(opponent_letters, player_letters, board_layout)
 
@@ -133,6 +133,6 @@ if __name__ == '__main__':
 
     # Sort the possible words by score
     possible_words.sort(key=lambda x: x[1])
-    for word in possible_words[-20:]:
+    for word in possible_words[-50:]:
         print(f"Word: {word[0]}, Score: {word[1]}, Given Letters: '{word[2]}', Kept Letters: '{word[3]}'")
 

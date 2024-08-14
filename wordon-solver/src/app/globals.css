@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 0;
+  --background-rgb: 20, 20, 20;
+}
+
+body {
+  color: rgb(255, 0, 0);
+  background: rgb(0,0,0);
+}
+
+label {
+  color: rgb(255, 255, 255);
+}
