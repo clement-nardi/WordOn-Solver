@@ -10,7 +10,7 @@ import re
 def process_words(opponent_letters, player_letters, board_layout):
     possible_words = []
     print(f"Opponent Letters: '{opponent_letters}', Player Letters: '{player_letters}', Board Layout: '{board_layout}'")
-    with open('ods6.txt_max7.txt') as f:
+    with open('ods6.txt.max7') as f:
         words = f.read().splitlines()
         for word in words:
             score, given_letters, kept_letters = process_word(word, opponent_letters, player_letters, board_layout)
@@ -100,10 +100,10 @@ if __name__ == '__main__':
     # 2. The 7 letters given to the player (" " for absent letter, "*" for joker)
     # 3. The layout of the board (" " for empty cell, "2" for double letter, "3" for triple letter, "W" for letter sent to opponent, "+" for +10)
     parser = argparse.ArgumentParser(description='WordON Solver')
-    parser.add_argument('letters', type=str, help='the 7 letters given to the player')
-    parser.add_argument('given_letters', type=str, help='The 0, 1 or 2 letters given by the opponent')
+    parser.add_argument('letters', type=str, help='the 7 letters given to the player (* for joker)')
+    parser.add_argument('given_letters', type=str, help='The 0, 1 or 2 letters given by the opponent (* for joker)')
     #optional argument
-    parser.add_argument('board_layout', type=str, help='The layout of the board', default='      +', nargs='?')
+    parser.add_argument('board_layout', type=str, help='The layout of the board (" " for empty, "2" for 2x, "3" for 3x, "W" for letters sent to the opponent, "+" for +10)', default='      +', nargs='?')
     args = parser.parse_args()
 
     opponent_letters = args.given_letters.lower()
