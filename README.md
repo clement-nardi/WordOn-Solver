@@ -2,7 +2,13 @@
 
 Based on the ODS 6 for now since I didn't find the official list of words.
 
-# Usage
+# Web version
+
+Available at [wordon.nardi.fr](http://wordon.nardi.fr)
+
+# Python version
+
+## Usage
 
 ```
 ./solve.py -h
@@ -20,7 +26,7 @@ options:
   -h, --help     show this help message and exit
 ```
 
-# Example usage
+## Example usage
 
 ```
 ./solve.py "wetsja*" "PS" "2  W W+"
