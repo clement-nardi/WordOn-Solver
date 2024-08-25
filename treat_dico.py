@@ -31,4 +31,4 @@ if __name__ == '__main__':
                     if len(re.sub("[a-z]", "", word)) > 0:
                         print("unexpected character found in word: " + word)
                         exit(1)
-                    f.write(word + "\n")
+                    f.write(word.upper() + "\n")
