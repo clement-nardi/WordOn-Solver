@@ -152,9 +152,9 @@
         return;
       }
       const words: WordResult[] = processWords(
-        values.givenLetters.toUpperCase(), 
+        values.givenLetters.toUpperCase().replace(/[^A-Z*]/gi, ''), 
         values.layout.toUpperCase(), 
-        values.letters.toUpperCase()
+        values.letters.toUpperCase().replace(/[^A-Z*]/gi, '')
       );
 
       // Sort words by score
