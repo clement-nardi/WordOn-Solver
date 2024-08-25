@@ -25,11 +25,9 @@ if __name__ == '__main__':
                     word = re.sub("[ôö]", "o", word)
                     word = re.sub("[ûüù]", "u", word)
                     word = re.sub("[ç]", "c", word)
+                    word = re.sub("[-' .]", "c", word)
                     word = word.replace("œ", "oe")
-                    if "'" in word or '-' in word or ' ' in word or '.' in word:
-                        print("ignoring composed word: " + word)
-                        continue
-
+                    
                     if len(re.sub("[a-z]", "", word)) > 0:
                         print("unexpected character found in word: " + word)
                         exit(1)
