@@ -182,8 +182,14 @@
     
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
       console.log('Success:', values);
-      if (values.givenLetters === undefined || values.layout === undefined || values.letters === undefined) {
-        return;
+      if (values.givenLetters === undefined) {
+        values.givenLetters = ''
+      } 
+      if (values.layout === undefined) {
+        values.layout = ''
+      }
+      if (values.letters === undefined) {
+        values.letters = ''
       }
       const words: WordResult[] = processWords(
         values.givenLetters.toUpperCase().replace(/[^A-Z*]/gi, ''), 
@@ -230,7 +236,7 @@
           {word.map((letter, index) => {
             const tagColor = letter.isGiven?'#ddba18':'white'
             const letterTag = letter.isJoker?"<i>":"<b>"
-            return <Tag style={{marginInlineEnd: "2px", width: "23px"}} color={tagColor}>
+            return <Tag key={index} style={{marginInlineEnd: "2px", width: "23px"}} color={tagColor}>
               <span style={{ color:letter.letter=="*"?tagColor:letter.isGiven?"#c34600":"black"}} className="notranslate">
                 {letter.isJoker? <u>{letter.letter}</u> : <b>{letter.letter}</b>}
               </span>
@@ -267,7 +273,7 @@
           <Form.Item<FieldType>
             label="Given Letters"
             name="givenLetters"
-            rules={[{ required: true, message: 'up to 2 letters' }]}
+            rules={[{ message: 'up to 2 letters' }]}
           >
           <Input placeholder='0, 1 or 2 letters given by opponent, "*" for joker'/>
           </Form.Item>
@@ -276,7 +282,7 @@
             label="Layout"
             name="layout"
             
-            rules={[{ required: true, message: "7 characters" }]}
+            rules={[{ message: "7 characters" }]}
           >
           <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
           </Form.Item>
@@ -284,7 +290,7 @@
           <Form.Item<FieldType>
             label="Letters"
             name="letters"
-            rules={[{ required: true, message: 'up to 7 characters' }]}
+            rules={[{ message: 'up to 7 characters' }]}
           >
           <Input placeholder='up to 7 letters, "*" for joker'/>
           </Form.Item>
