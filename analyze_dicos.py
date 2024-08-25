@@ -20,9 +20,9 @@ if __name__ == '__main__':
         dico_requirements = f.read().splitlines()
         for requirement in dico_requirements:
             if requirement.startswith('!'):
-                dico_must_not_include.append(requirement[1:].lower())
+                dico_must_not_include.append(requirement[1:].upper())
             else:
-                dico_must_include.append(requirement.lower())
+                dico_must_include.append(requirement.upper())
     
     print(dico_must_include)
     print(dico_must_not_include)

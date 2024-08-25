@@ -8,12 +8,18 @@
   import { ConfigProvider, theme } from 'antd'
   
   type WordResult = {
-    word: string;
+    word: Letter[];
     score: number | undefined;
-    givenLetters: string;
-    keptLetters: string;
+    givenLetters: Letter[];
+    keptLetters: Letter[];
     key?: number;
   };
+
+  type Letter = {
+    letter: string;
+    isJoker: boolean;
+    isGiven: boolean;
+  }
   
   export default function Home() {
     
@@ -96,53 +102,63 @@
       return possibleWords
     }
     
-    const processWord = (word: string, givenLetters: string, letters: string, layout: string): WordResult => {
-      let given_letters = ''
-      let kept_letters = ''
+    const processWord = (word: string, opponentLetters: string, playerLetters: string, layout: string): WordResult => {
+      let givenLetters: Letter[] = []
+      let keptLetters: Letter[] = []
       let score = 0
-      let letter_idx = 0
-      let player_letters = letters
-      let opponent_letters = givenLetters
+      let letterIdx = 0
+      let wordLetters: Letter[] = []
       for (const letter of word.toUpperCase()) {
-        let joker = false
-        if (opponent_letters.includes(letter)) {
-          opponent_letters = opponent_letters.replace(letter, '')
-        } else if (player_letters.includes(letter)) {
-          player_letters = player_letters.replace(letter, '')
-        } else if (opponent_letters.includes('*')) {
-          opponent_letters = opponent_letters.replace('*', '')
-          joker = true
-        } else if (player_letters.includes('*')) {
-          player_letters = player_letters.replace('*', '')
-          joker = true
+        let playedLetter: Letter|undefined = undefined
+        if (opponentLetters.includes(letter)) {
+          opponentLetters = opponentLetters.replace(letter, '')
+          playedLetter = {letter: letter, isJoker: false, isGiven: true}
+        } else if (playerLetters.includes(letter)) {
+          playerLetters = playerLetters.replace(letter, '')
+          playedLetter = {letter: letter, isJoker: false, isGiven: false}
+        } else if (opponentLetters.includes('*')) {
+          opponentLetters = opponentLetters.replace('*', '')
+          playedLetter = {letter: letter, isJoker: true, isGiven: true}
+        } else if (playerLetters.includes('*')) {
+          playerLetters = playerLetters.replace('*', '')
+          playedLetter = {letter: letter, isJoker: true, isGiven: false}
         } else {
-          return {word: word, score: undefined, givenLetters: '', keptLetters: ''}
+          return {word: [], score: undefined, givenLetters: [], keptLetters: []}
         }
-        const played_letter = joker ? '*' : letter
-        if (layout[letter_idx] == 'W') {
-          given_letters += played_letter
+        wordLetters.push(playedLetter)
+        if (layout[letterIdx] == 'W') {
+          if (playedLetter.isJoker) {
+            givenLetters.push({letter: '*', isJoker: true, isGiven: playedLetter.isGiven})
+          } else {
+            givenLetters.push(playedLetter)
+          }
         }
-        const board_card = layout[letter_idx]
-        if (board_card == '2') {
-          score += 2 * letter_score[played_letter]
-        } else if (board_card == '3') {
-          score += 3 * letter_score[played_letter]
-        } else if (board_card == '+') {
+        const boardCard = layout[letterIdx]
+        if (!playedLetter.isJoker) {
+          if (boardCard == '2') {
+            score += 2 * letter_score[playedLetter.letter]
+          } else if (boardCard == '3') {
+            score += 3 * letter_score[playedLetter.letter]
+          } else {
+            score += letter_score[playedLetter.letter]
+          }
+        }
+        if (boardCard == '+') {
           score += 10
-          score += letter_score[played_letter]
-        } else {
-          score += letter_score[played_letter]
         }
-        letter_idx += 1
+        letterIdx += 1
       }
-      if (opponent_letters.length == 0) {
+      if (opponentLetters.length == 0) {
         score *= 2
       }
-      for (const letter of opponent_letters) {
+      for (const letter of opponentLetters) {
         score -= letter_score[letter]
       }
-      kept_letters = player_letters
-      return {word: word, score: score, givenLetters: given_letters, keptLetters: kept_letters}
+      keptLetters = []
+      for (const letter of playerLetters) {
+        keptLetters.push({letter: letter, isJoker: letter=="*", isGiven: false} )
+      }
+      return {word: wordLetters, score: score, givenLetters: givenLetters, keptLetters: keptLetters}
     }
     
     const lettersValue = (letters: string) => {
@@ -154,6 +170,14 @@
       const nb_consonants = letters.match(/[BCDFGHJKLMNPQRSTVWXZ]/)?.length || 0
       value -= Math.abs(nb_vowels - nb_consonants)
       return value
+    }
+
+    const letters2String = (letters: Letter[]) => {
+      let str = ''
+      for (const letter of letters) {
+        str += letter.letter
+      }
+      return str
     }
     
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
@@ -175,17 +199,17 @@
         if (a.score != b.score) {
           return b.score - a.score
         }
-        const a_kvalue = lettersValue(a.keptLetters)
-        const b_kvalue = lettersValue(b.keptLetters)
-        const a_gvalue = lettersValue(a.givenLetters)
-        const b_gvalue = lettersValue(b.givenLetters)
+        const a_kvalue = lettersValue(letters2String(a.keptLetters))
+        const b_kvalue = lettersValue(letters2String(b.keptLetters))
+        const a_gvalue = lettersValue(letters2String(a.givenLetters))
+        const b_gvalue = lettersValue(letters2String(b.givenLetters))
         const a_value = a_kvalue - a_gvalue
         const b_value = b_kvalue - b_gvalue
         if (a_value != b_value) {
           return b_value - a_value
         }
 
-        return a.word.localeCompare(b.word)
+        return letters2String(a.word).localeCompare(letters2String(b.word))
       });
       
       // add unique key to each word
@@ -199,11 +223,18 @@
       
     };
 
-    const tiles = (word: string) => {
+    const tiles = (word: Letter[]) => {
+      
       return (
-        <div>
-          {word.split('').map((letter, index) => {
-            return <Tag color="white"><span style={{color:"black"}} className="notranslate"><b>{letter}</b></span></Tag>
+        <div style={{whiteSpace: "nowrap"}}>
+          {word.map((letter, index) => {
+            const tagColor = letter.isGiven?'#ddba18':'white'
+            const letterTag = letter.isJoker?"<i>":"<b>"
+            return <Tag style={{marginInlineEnd: "2px", width: "23px"}} color={tagColor}>
+              <span style={{ color:letter.letter=="*"?tagColor:letter.isGiven?"#c34600":"black"}} className="notranslate">
+                {letter.isJoker? <u>{letter.letter}</u> : <b>{letter.letter}</b>}
+              </span>
+            </Tag>
           })}
         </div>
       )
@@ -223,56 +254,58 @@
         // algorithm: [theme.darkAlgorithm, theme.compactAlgorithm],
       }}
       >
-      <Form
-        name="letters-and-layout"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-        style={{ maxWidth: 600 }}
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
-      >
-        <Form.Item<FieldType>
-          label="Given Letters"
-          name="givenLetters"
-          rules={[{ required: true, message: 'up to 2 letters' }]}
+        <Form
+          name="letters-and-layout"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          style={{ maxWidth: 600 }}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
+          autoComplete="off"
         >
-        <Input placeholder='0, 1 or 2 letters given by opponent, "*" for joker'/>
-        </Form.Item>
-        
-        <Form.Item<FieldType>
-          label="Layout"
-          name="layout"
+          <Form.Item<FieldType>
+            label="Given Letters"
+            name="givenLetters"
+            rules={[{ required: true, message: 'up to 2 letters' }]}
+          >
+          <Input placeholder='0, 1 or 2 letters given by opponent, "*" for joker'/>
+          </Form.Item>
           
-          rules={[{ required: true, message: "7 characters" }]}
-        >
-        <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
-        </Form.Item>
-        
-        <Form.Item<FieldType>
-          label="Letters"
-          name="letters"
-          rules={[{ required: true, message: 'up to 7 characters' }]}
-        >
-        <Input placeholder='up to 7 letters, "*" for joker'/>
-        </Form.Item>
-        
-        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-        <Button type="primary" htmlType="submit">
-        Submit
-        </Button>
-        </Form.Item>
-      </Form>
-      <Table dataSource={possibleWords} columns={[
-        {title: 'Word', dataIndex: 'word', 
-          render: (text) => tiles(text) },
-        {title: 'Score', dataIndex: 'score'},
-        {title: 'Given Letters', dataIndex: 'givenLetters', 
-          render: (text) => tiles(text) },
-        {title: 'Kept Letters', dataIndex: 'keptLetters', 
-          render: (text) => tiles(text) },
-      ]} />
+          <Form.Item<FieldType>
+            label="Layout"
+            name="layout"
+            
+            rules={[{ required: true, message: "7 characters" }]}
+          >
+          <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
+          </Form.Item>
+          
+          <Form.Item<FieldType>
+            label="Letters"
+            name="letters"
+            rules={[{ required: true, message: 'up to 7 characters' }]}
+          >
+          <Input placeholder='up to 7 letters, "*" for joker'/>
+          </Form.Item>
+          
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+          <Button type="primary" htmlType="submit">
+          Submit
+          </Button>
+          </Form.Item>
+        </Form>.
+        <Table dataSource={possibleWords} columns={[
+          {title: 'Word', dataIndex: 'word', 
+            render: (text) => tiles(text) },
+          {title: 'Score', dataIndex: 'score',
+            render: (text) => <b>{text}</b>
+          },
+          {title: 'Given Letters', dataIndex: 'givenLetters', 
+            render: (text) => tiles(text) },
+          {title: 'Kept Letters', dataIndex: 'keptLetters', 
+            render: (text) => tiles(text) },
+        ]} size="middle"/>
       
       </ConfigProvider>
       </main>
