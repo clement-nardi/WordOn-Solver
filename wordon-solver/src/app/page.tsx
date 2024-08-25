@@ -4,7 +4,7 @@
   import { useEffect, useState } from "react"
   
   import type { FormProps } from 'antd'
-  import { Button, Checkbox, Form, Input, Table } from 'antd'
+  import { Button, Checkbox, Form, Input, Table, Tag } from 'antd'
   import { ConfigProvider, theme } from 'antd'
   
   type WordResult = {
@@ -198,6 +198,16 @@
       console.log(words);
       
     };
+
+    const tiles = (word: string) => {
+      return (
+        <div>
+          {word.split('').map((letter, index) => {
+            return <Tag color="white"><span style={{color:"black"}}><b>{letter}</b></span></Tag>
+          })}
+        </div>
+      )
+    }
     
     const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
       console.log('Failed:', errorInfo);
@@ -255,10 +265,13 @@
         </Form.Item>
       </Form>
       <Table dataSource={possibleWords} columns={[
-        {title: 'Word', dataIndex: 'word'},
+        {title: 'Word', dataIndex: 'word', 
+          render: (text) => tiles(text) },
         {title: 'Score', dataIndex: 'score'},
-        {title: 'Given Letters', dataIndex: 'givenLetters'},
-        {title: 'Kept Letters', dataIndex: 'keptLetters'},
+        {title: 'Given Letters', dataIndex: 'givenLetters', 
+          render: (text) => tiles(text) },
+        {title: 'Kept Letters', dataIndex: 'keptLetters', 
+          render: (text) => tiles(text) },
       ]} />
       
       </ConfigProvider>
