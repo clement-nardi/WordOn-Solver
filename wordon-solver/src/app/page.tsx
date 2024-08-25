@@ -203,7 +203,7 @@
       return (
         <div>
           {word.split('').map((letter, index) => {
-            return <Tag color="white"><span style={{color:"black"}}><b>{letter}</b></span></Tag>
+            return <Tag color="white"><span style={{color:"black"}} className="notranslate"><b>{letter}</b></span></Tag>
           })}
         </div>
       )
