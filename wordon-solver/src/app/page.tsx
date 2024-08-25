@@ -20,9 +20,24 @@
     const [possibleWords, setPossibleWords] = useState<WordResult[]>([]);
 
     const loadDictionary = async () => {
-      const response = await fetch('ods6.txt.max7')
+      let response = await fetch('ods6.txt.max7')
       const words = await response.text()
-      setDictionary(words.split('\n'));
+      response = await fetch("dico_include_exclude.list")
+      const includeExclude = await response.text()
+      let dico = words.split('\n')
+      const wordsToRemove: string[] = []
+      const wordsToAdd: string[] = []
+      for (const word of includeExclude.split('\n')) {
+        if (word.startsWith('!')) {
+          wordsToRemove.push(word.substring(1))
+        } else {
+          wordsToAdd.push(word)
+        }
+      }
+      dico.push(...wordsToAdd)
+      dico = dico.filter((word) => !wordsToRemove.includes(word))
+      dico = dico.filter((word) => word.length > 0)
+      setDictionary(dico);
     };
 
     useEffect(() => {
