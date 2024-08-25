@@ -6,19 +6,20 @@
   import type { FormProps } from 'antd'
   import { Button, Checkbox, Form, Input, Table } from 'antd'
   import { ConfigProvider, theme } from 'antd'
-
+  
   type WordResult = {
     word: string;
     score: number | undefined;
     givenLetters: string;
     keptLetters: string;
+    key?: number;
   };
   
   export default function Home() {
-
+    
     const [dictionary, setDictionary] = useState<string[]>([]);
     const [possibleWords, setPossibleWords] = useState<WordResult[]>([]);
-
+    
     const loadDictionary = async () => {
       let response = await fetch('ods6.txt.max7')
       const words = await response.text()
@@ -39,7 +40,7 @@
       dico = dico.filter((word) => word.length > 0)
       setDictionary(dico);
     };
-
+    
     useEffect(() => {
       loadDictionary();
     }, []);
@@ -49,11 +50,11 @@
       layout?: string;
       letters?: string;
     };
-
+    
     type LetterScoresType = {
       [key: string]: number;
     };
-
+    
     const letter_score: LetterScoresType = {
       "A" : 1,
       "B" : 3,
@@ -83,7 +84,7 @@
       "Z" : 10,
       "*" : 0
     };
-
+    
     const processWords = (givenLetters: string, layout: string, letters: string) => {
       const possibleWords: WordResult[] = []
       for (const word of dictionary) {
@@ -143,8 +144,8 @@
       kept_letters = player_letters
       return {word: word, score: score, givenLetters: given_letters, keptLetters: kept_letters}
     }
-
-
+    
+    
     
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
       console.log('Success:', values);
@@ -156,7 +157,7 @@
         values.layout.toUpperCase(), 
         values.letters.toUpperCase().replace(/[^A-Z*]/gi, '')
       );
-
+      
       // Sort words by score
       words.sort((a, b) => {
         if (a.score === undefined || b.score === undefined) {
@@ -167,11 +168,16 @@
         }
         return b.score - a.score;
       });
+      
+      // add unique key to each word
+      words.forEach((word, index) => {
+        word.key = index;
+      });
 
       setPossibleWords(words);
-
+      
       console.log(words);
-
+      
     };
     
     const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
@@ -189,53 +195,53 @@
       }}
       >
       <Form
-      name="letters-and-layout"
-      labelCol={{ span: 8 }}
-      wrapperCol={{ span: 16 }}
-      style={{ maxWidth: 600 }}
-      initialValues={{ remember: true }}
-      onFinish={onFinish}
-      onFinishFailed={onFinishFailed}
-      autoComplete="off"
+        name="letters-and-layout"
+        labelCol={{ span: 8 }}
+        wrapperCol={{ span: 16 }}
+        style={{ maxWidth: 600 }}
+        initialValues={{ remember: true }}
+        onFinish={onFinish}
+        onFinishFailed={onFinishFailed}
+        autoComplete="off"
       >
-      <Form.Item<FieldType>
-      label="Given Letters"
-      name="givenLetters"
-      rules={[{ required: true, message: 'up to 2 letters' }]}
-      >
-      <Input placeholder='0, 1 or 2 letters given by opponent, "*" for joker'/>
-      </Form.Item>
-      
-      <Form.Item<FieldType>
-      label="Layout"
-      name="layout"
-
-      rules={[{ required: true, message: "7 characters" }]}
-      >
-      <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
-      </Form.Item>
-      
-      <Form.Item<FieldType>
-      label="Letters"
-      name="letters"
-      rules={[{ required: true, message: 'up to 7 characters' }]}
-      >
-      <Input placeholder='up to 7 letters, "*" for joker'/>
-      </Form.Item>
-      
-      <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-      <Button type="primary" htmlType="submit">
-      Submit
-      </Button>
-      </Form.Item>
+        <Form.Item<FieldType>
+          label="Given Letters"
+          name="givenLetters"
+          rules={[{ required: true, message: 'up to 2 letters' }]}
+        >
+        <Input placeholder='0, 1 or 2 letters given by opponent, "*" for joker'/>
+        </Form.Item>
+        
+        <Form.Item<FieldType>
+          label="Layout"
+          name="layout"
+          
+          rules={[{ required: true, message: "7 characters" }]}
+        >
+        <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
+        </Form.Item>
+        
+        <Form.Item<FieldType>
+          label="Letters"
+          name="letters"
+          rules={[{ required: true, message: 'up to 7 characters' }]}
+        >
+        <Input placeholder='up to 7 letters, "*" for joker'/>
+        </Form.Item>
+        
+        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+        <Button type="primary" htmlType="submit">
+        Submit
+        </Button>
+        </Form.Item>
       </Form>
       <Table dataSource={possibleWords} columns={[
-        {title: 'Word', dataIndex: 'word', key: 'word'},
-        {title: 'Score', dataIndex: 'score', key: 'score'},
-        {title: 'Given Letters', dataIndex: 'givenLetters', key: 'givenLetters'},
-        {title: 'Kept Letters', dataIndex: 'keptLetters', key: 'keptLetters'},
+        {title: 'Word', dataIndex: 'word'},
+        {title: 'Score', dataIndex: 'score'},
+        {title: 'Given Letters', dataIndex: 'givenLetters'},
+        {title: 'Kept Letters', dataIndex: 'keptLetters'},
       ]} />
-
+      
       </ConfigProvider>
       </main>
     );
