@@ -145,7 +145,16 @@
       return {word: word, score: score, givenLetters: given_letters, keptLetters: kept_letters}
     }
     
-    
+    const lettersValue = (letters: string) => {
+      let value = 0
+      if (letters.includes('*')) {
+        value += 100
+      }
+      const nb_vowels = letters.match(/[AEIOUY]/)?.length || 0
+      const nb_consonants = letters.match(/[BCDFGHJKLMNPQRSTVWXZ]/)?.length || 0
+      value -= Math.abs(nb_vowels - nb_consonants)
+      return value
+    }
     
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
       console.log('Success:', values);
@@ -163,10 +172,20 @@
         if (a.score === undefined || b.score === undefined) {
           return 1;
         }
-        if (a.score === b.score) {
-          return a.word.localeCompare(b.word);
+        if (a.score != b.score) {
+          return b.score - a.score
         }
-        return b.score - a.score;
+        const a_kvalue = lettersValue(a.keptLetters)
+        const b_kvalue = lettersValue(b.keptLetters)
+        const a_gvalue = lettersValue(a.givenLetters)
+        const b_gvalue = lettersValue(b.givenLetters)
+        const a_value = a_kvalue - a_gvalue
+        const b_value = b_kvalue - b_gvalue
+        if (a_value != b_value) {
+          return b_value - a_value
+        }
+
+        return a.word.localeCompare(b.word)
       });
       
       // add unique key to each word
