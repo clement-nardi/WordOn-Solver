@@ -1,10 +1,10 @@
   'use client';
   
   import Image from "next/image"
-  import { useEffect, useState } from "react"
+  import { useEffect, useState, useRef } from "react"
   
   import type { FormProps } from 'antd'
-  import { Button, Checkbox, Form, Input, Table, Tag } from 'antd'
+  import { Button, Checkbox, Form, Input, Table, Tag, InputRef, Space } from 'antd'
   import { ConfigProvider, theme } from 'antd'
   
   type WordResult = {
@@ -25,6 +25,10 @@
     
     const [dictionary, setDictionary] = useState<string[]>([]);
     const [possibleWords, setPossibleWords] = useState<WordResult[]>([]);
+    const [form] = Form.useForm();
+
+    const givenLettersRef = useRef<InputRef>(null);
+    const submitButtonRef = useRef<HTMLButtonElement>(null);
     
     const loadDictionary = async () => {
       let response = await fetch('ods6.txt.max7')
@@ -45,6 +49,13 @@
       dico = dico.filter((word) => !wordsToRemove.includes(word))
       dico = dico.filter((word) => word.length > 0)
       setDictionary(dico);
+
+      // test nextLayout
+      // let layout = ''
+      // for (let i = 0; i < 19; i++) {
+      //  console.log(layout)
+      //  layout = nextLayout(layout)
+      //}
     };
     
     useEffect(() => {
@@ -181,6 +192,7 @@
     }
     
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+      submitButtonRef.current?.focus()
       console.log('Success:', values);
       if (values.givenLetters === undefined) {
         values.givenLetters = ''
@@ -248,7 +260,33 @@
     
     const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
       console.log('Failed:', errorInfo);
-    };
+    }
+
+    const nextLayout = (layout: string) => {
+      const layouts = [
+        '      +',
+        '2  w w+',
+        '  w w3+',
+        'w3w   +',
+        ' w w2 +',
+        '  2ww +',
+        'w  3 w+'
+      ]
+      const idx = layouts.indexOf(layout)
+      if (idx == -1) {
+        return layouts[0]
+      }
+      return layouts[idx % (layouts.length-1) + 1]
+    }
+
+    const nextClick = () => {
+      const currentLayout = form.getFieldValue('layout')
+      const nextLayoutValue = nextLayout(currentLayout)
+      form.setFieldsValue({layout: nextLayoutValue, letters: '', givenLetters: ''})
+      givenLettersRef.current?.focus()
+
+    }
+
     return (
       <main>
       <ConfigProvider
@@ -261,6 +299,7 @@
       }}
       >
         <Form
+          form={form}
           name="letters-and-layout"
           labelCol={{ span: 8 }}
           wrapperCol={{ span: 16 }}
@@ -270,37 +309,45 @@
           onFinishFailed={onFinishFailed}
           autoComplete="off"
         >
-          <Form.Item<FieldType>
+
+          <Form.Item
+            label="Layout"
+            name="layout"
+            rules={[{ message: "7 characters" }]}
+          >
+            <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
+          </Form.Item>
+
+          <Form.Item
             label="Given Letters"
             name="givenLetters"
             rules={[{ message: 'up to 2 letters' }]}
           >
-          <Input placeholder='0, 1 or 2 letters given by opponent, "*" for joker'/>
+            <Input 
+              placeholder='0, 1 or 2 letters given by opponent, "*" for joker'
+              ref={givenLettersRef}
+            />
           </Form.Item>
           
-          <Form.Item<FieldType>
-            label="Layout"
-            name="layout"
-            
-            rules={[{ message: "7 characters" }]}
-          >
-          <Input placeholder='"2" for x2, "3" for x3, "w" for sent letters and "+" for +10'/>
-          </Form.Item>
-          
-          <Form.Item<FieldType>
+          <Form.Item
             label="Letters"
             name="letters"
             rules={[{ message: 'up to 7 characters' }]}
           >
-          <Input placeholder='up to 7 letters, "*" for joker'/>
+            <Input placeholder='up to 7 letters, "*" for joker'/>
           </Form.Item>
           
-          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-          <Button type="primary" htmlType="submit">
-          Submit
-          </Button>
+          <Form.Item wrapperCol={{offset: 8, span: 16 }}>
+            <Space>
+              <Button type="primary" htmlType="submit" ref={submitButtonRef}>
+                Submit
+              </Button>
+              <Button type="primary" htmlType="button" onClick={nextClick}>
+                Next
+              </Button>
+            </Space>
           </Form.Item>
-        </Form>.
+        </Form>
         <Table dataSource={possibleWords} columns={[
           {title: 'Word', dataIndex: 'word', 
             render: (text) => tiles(text) },
